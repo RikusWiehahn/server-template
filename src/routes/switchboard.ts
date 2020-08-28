@@ -2,7 +2,6 @@ import {
   ServiceResponseWithEvents,
   RequestBody,
   Err,
-  ServerFunction,
 } from '../config/interfaces';
 import { signIn } from '../services/auth-services';
 //
@@ -14,7 +13,7 @@ import { signIn } from '../services/auth-services';
 //  #       ####  #    #  ####    #   #  ####  #    #  ####
 
 export const services = {
-  SIGN_IN: signIn as ServerFunction,
+  SIGN_IN: signIn,
 };
 
 //

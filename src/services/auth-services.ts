@@ -4,8 +4,8 @@ export const signIn = async ({
   email,
   password,
 }: {
-  email: string;
-  password: string;
+  email?: string;
+  password?: string;
 }): Promise<ServiceResponseWithEvents> => {
   console.log('%cfunction', 'color: magenta;', 'signIn');
   try {
