@@ -1,9 +1,6 @@
-import {
-  ServiceResponseWithEvents,
-  RequestBody,
-  Err,
-} from '../config/interfaces';
-import { signIn } from '../services/auth-services';
+import { Request } from 'express';
+import { testFunction } from '../services/test-services';
+
 //
 //  ###### #    # #    #  ####  ##### #  ####  #    #  ####
 //  #      #    # ##   # #    #   #   # #    # ##   # #
@@ -13,7 +10,7 @@ import { signIn } from '../services/auth-services';
 //  #       ####  #    #  ####    #   #  ####  #    #  ####
 
 export const services = {
-  SIGN_IN: signIn,
+  TEST: testFunction,
 };
 
 //
@@ -24,42 +21,76 @@ export const services = {
 //  #    # ##  ## #   #   #    # #    # #    # #    # #    # #   #  #    #
 //   ####  #    # #   #    ####  #    # #####   ####  #    # #    # #####
 
-// loops through services based on type and calls corresponding function
+export interface ServiceResponse {
+  success: boolean;
+  message: string;
+  output: { [key: string]: any } | null;
+  events: ServiceResponseEvent[];
+}
+
+export interface ServiceResponseEvent {
+  id: string;
+  message: string;
+  output: { [key: string]: any } | null;
+}
+
+export interface RequestWithBody extends Request {
+  body: { type: string; input: any };
+}
+
 export const switchboard = async ({
   type,
   input,
-}: RequestBody): Promise<ServiceResponseWithEvents> => {
+}: {
+  type: string;
+  input: any;
+}): Promise<ServiceResponse> => {
+  const err = {
+    success: false,
+    message: 'Invalid service type',
+    output: null,
+    events: [],
+  };
   // incoming
-  console.groupCollapsed('%cincoming', 'color: aqua;', type);
+  console.groupCollapsed('%cIncoming 🛎', 'color: aqua;', type);
   console.log('input', input);
   console.groupEnd();
   const servicesList = Object.entries(services);
 
+  // loop through services and call the right one
   for (let i = 0; i < servicesList.length; i += 1) {
-    if (type === servicesList[i][0]) {
-      const { success, message, output, events } = await servicesList[i][1](
-        input
-      );
+    const serviceType = servicesList[i][0];
+    const serviceFunction = servicesList[i][1];
+
+    if (type === serviceType) {
+      const { success, message, output, events } = await serviceFunction(input);
       if (success) {
-        console.groupCollapsed('%cresponse', 'color: lime;', type);
+        console.groupCollapsed('%cResponse 🎁', 'color: lime;', type);
         console.log('success', success);
         console.log('message:', message);
         console.log('output', output);
+        console.log('events', events);
         console.groupEnd();
-        return { success, message, output, events };
+        return {
+          success,
+          message,
+          output,
+          events,
+        };
       } else {
-        console.groupCollapsed('%cresponse', 'color: orange;', type);
+        console.groupCollapsed('%cResponse 🧨', 'color: orange;', type);
         console.log('success', success);
         console.log('message:', message);
         console.log('output', output);
+        console.log('events', events);
         console.groupEnd();
-        return { ...Err, message };
+        return { ...err, message };
       }
     }
   }
-  console.groupCollapsed('%cresponse', 'color: red;', type);
+  console.groupCollapsed('%cResponse 💀', 'color: red;', type);
   console.log('success', false);
   console.log('message:', 'Invalid service');
   console.groupEnd();
-  return { ...Err, message: 'Invalid service' };
+  return { ...err, message: 'Invalid service' };
 };
